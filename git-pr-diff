@@ -1,0 +1,44 @@
+#! /usr/bin/ruby
+
+# The MIT License (MIT)
+# Copyright (c) 2020 Yukiya Nakagawa <yn.airscope@gmail.com>
+# Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+# The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+# The merge commit expression when a pull request accepted
+PULL_REQUEST_LOG_REGEXP = /commit [0-9a-f]+\nMerge: ([0-9a-f]{7,40}) ([0-9a-f]{7,40})\nAuthor: (.+)\nDate:   ([^\n]+)\n\n\s{4}Merge pull request (#[0-9]+) from ([^\n]+)\n\n?\s+(.+)/
+
+range = nil
+if ARGV[0] == "-h" then
+  puts "List of GitHub pull requests between the range like 'branch-a branch-b' (with Markdown friendly list format).\n\n"
+  puts "usage: git pr-diff mybranch development"
+  puts "    or git pr-diff deadbeef (deadbeef...HEAD)"
+  puts "    or git pr-diff (default: master...HEAD)"
+  exit
+elsif ARGV[0] and ARGV[1] then
+  range = "#{ARGV[0]}...#{ARGV[1]}"
+elsif ARGV[0] then
+  range = "#{ARGV[0]}...HEAD"
+end
+
+if range == nil then
+  range = "master...HEAD"
+end
+
+puts "List pull requests for range: `#{range}`\n\n"
+
+logs = `git rev-list --right-only #{range} | xargs git show -q`
+
+prlogs = []
+logs.scan(PULL_REQUEST_LOG_REGEXP) do |matched|
+  prlogs.push({:number => matched[4], :title => matched[6]})
+end
+
+prlogs.sort! do |a, b|
+  a[:number] <=> b[:number]
+end
+
+prlogs.each do |prlog|
+  puts "* #{prlog[:number]} #{prlog[:title]}"
+end
