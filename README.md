@@ -28,4 +28,4 @@ List pull requests for range: `TagA...TagB`
 
 ## Article
 
-https://qiita.com/Nkzn/items/60b30f1c9d0e33dfc424 (Japanese Only)
+https://qiita.com/Nkzn/items/60b30f1c9d0e33dfc424 (Written in Japanese)
